@@ -1,8 +1,8 @@
-from pickle import TRUE
 import socket
 import signal
 import sys
 import random
+import time
 import hashTable
 
 
@@ -132,7 +132,8 @@ while True:
     # (1) `html_content_to_send` => add the HTML content you'd
     # like to send to the client.
     # Right now, we just send the default login page.
-    html_content_to_send = login_page
+    if body == '':
+        html_content_to_send = login_page
 
     if body:
         user, psw = parseEntity(body)
@@ -140,6 +141,7 @@ while True:
             html_content_to_send = success_page + user_secret.get_val(user)
         else:
             html_content_to_send = bad_creds_page
+
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
@@ -158,8 +160,8 @@ while True:
     print_value('response', response)    
     client.send(response)
     client.close()
-    
     print("Served one request/connection!")
+    
     print()
 
 # We will never actually get here.
