@@ -91,22 +91,24 @@ buildUserSecretDatabase()
 
 def parseEntity(body):
     data = bytes(body).split('&')
-    user = data[0]
-    psw = data[1]
 
-    user = user.split('=')[1]
-    psw = psw.split('=')[1]
+    if len(data) > 1:
+        user = data[0]
+        psw = data[1]
 
+        user = user.split('=')[1]
+        psw = psw.split('=')[1]
+    else:
+        data = bytes(body).split('=')
+        if data[0] == 'username':
+            user = data[1]
+            psw = ''
+        else:
+            user = ''
+            psw = data[1]
+            
     return user,psw
-
-def authenticateUser(user, psw, user_pass):
-    authenticate = True
-    # 
-    if (user_pass.get_val(user) != '' or user != '') and user_pass.get_val(user) == psw:
-        authenticate = True
     
-
-
 ### Loop to accept incoming HTTP connections and respond.
 while True:
 
@@ -134,7 +136,7 @@ while True:
 
     if body:
         user, psw = parseEntity(body)
-        if user_pass.get_val(user) != '' and user_pass.get_val(user) == psw:
+        if (user_pass.get_val(user) != '' or user != '') and user_pass.get_val(user) == psw:
             html_content_to_send = success_page + user_secret.get_val(user)
         else:
             html_content_to_send = bad_creds_page
