@@ -201,7 +201,7 @@ while True:
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
 
-    # headers_to_send = ''
+    headers_to_send = ''
 
     # Construct and send the final response
     response = 'HTTP/1.1 200 OK\r\n'
