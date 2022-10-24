@@ -49,10 +49,10 @@ success_page = """
 #### Helper functions
 # Printing.
 def print_value(tag, value):
-    print "Here is the", tag
-    print "\"\"\""
-    print value
-    print "\"\"\""
+    print ("Here is the", tag)
+    print ("\"\"\"")
+    print (value)
+    print ("\"\"\"")
     print
 
 
@@ -123,17 +123,15 @@ def store_cookie(username, cookie):
 # the reason why the cookie is from the last run is the reason why you have case return 0. Makes sense cause it should
 # persist after server is closed
 def find_cookie(headers):
-    data = bytes(headers).split()
-
+    data = bytes(headers).split('\r\n')
     for lines in data:
-        headings = lines.split()
-        if headings[0] == 'Cookies':
-            if user_cookie.get_val(headings[1]):
+        if "Cookie" in lines:
+            getLine = lines.split('=')
+            if user_cookie.get_val(getLine[1]):
                 return 1
             else:
                 return 0
-        else:
-            return 2
+    return 2
 
 
 ### Loop to accept incoming HTTP connections and respond.
@@ -161,6 +159,9 @@ while True:
     # (1) `html_content_to_send` => add the HTML content you'd
     # like to send to the client.
     # Right now, we just send the default login page.
+
+    headers_to_send = ''
+    
     if flag == 1:
         html_content_to_send = success_page
     if flag == 2:
@@ -198,7 +199,7 @@ while True:
     client.send(response)
     client.close()
 
-    print "Served one request/connection!"
+    print ("Served one request/connection!")
     print
 
 # We will never actually get here.
