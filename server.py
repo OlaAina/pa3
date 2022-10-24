@@ -1,7 +1,10 @@
+from pickle import TRUE
 import socket
 import signal
 import sys
 import random
+import hashTable
+
 
 # Read a command line argument for the port where the server
 # must run.
@@ -18,7 +21,7 @@ sock.listen(2)
 
 ### Contents of pages we will serve.
 # Login form
-login_form = b"""
+login_form = """
    <form action = "http://localhost:%d" method = "post">
    Name: <input type = "text" name = "username">  <br/>
    Password: <input type = "text" name = "password" /> <br/>
@@ -26,11 +29,11 @@ login_form = b"""
    </form>
 """ % port
 # Default: Login page.
-login_page = b"<h1>Please login</h1>" + login_form
+login_page = "<h1>Please login</h1>" + login_form
 # Error page for bad credentials
-bad_creds_page = b"<h1>Bad user/pass! Try again</h1>" + login_form
+bad_creds_page = "<h1>Bad user/pass! Try again</h1>" + login_form
 # Successful logout
-logout_page = b"<h1>Logged out successfully</h1>" + login_form
+logout_page = "<h1>Logged out successfully</h1>" + login_form
 # A part of the page that will be displayed after successful
 # login or the presentation of a valid cookie
 success_page = """
@@ -65,21 +68,60 @@ signal.signal(signal.SIGINT, sigint_handler)
 # TODO: put your application logic here!
 # Read login credentials for all the users
 # Read secret data of all the users
+# CHECK 
 
+user_pass = hashTable.hashTable(100)
+user_secret = hashTable.hashTable(100)
 
+def buildUserPassDatabase():
+    passwords = open("passwords.txt", "r")
+    for line in passwords:
+        data = line.split()
+        user_pass.set_val(data[0], data[1])
+    
+
+def buildUserSecretDatabase():
+    secrets = open("secrets.txt", "r")
+    for line in secrets:
+        data = line.split()
+        user_secret.set_val(data[0], data[1])   
+
+buildUserPassDatabase()
+buildUserSecretDatabase()
+
+def parseEntity(body):
+    data = bytes(body).split('&')
+    user = data[0]
+    psw = data[1]
+
+    user = user.split('=')[1]
+    psw = psw.split('=')[1]
+
+    return user,psw
+
+def authenticateUser(user, psw, user_pass):
+    authenticate = True
+    # 
+    if (user_pass.get_val(user) != '' or user != '') and user_pass.get_val(user) == psw:
+        authenticate = True
+    
 
 
 ### Loop to accept incoming HTTP connections and respond.
 while True:
+
     client, addr = sock.accept()
     req = client.recv(1024)
 
     # Let's pick the headers and entity body apart
-    header_body = req.split(b'\r\n\r\n')
+    header_body = req.split('\r\n\r\n')
     headers = header_body[0]
     body = '' if len(header_body) == 1 else header_body[1]
     print_value('headers', headers)
     print_value('entity body', body)
+
+    
+    
 
     # TODO: Put your application logic here!
     # Parse headers and body and perform various actions
@@ -89,6 +131,13 @@ while True:
     # like to send to the client.
     # Right now, we just send the default login page.
     html_content_to_send = login_page
+
+    if body:
+        user, psw = parseEntity(body)
+        if user_pass.get_val(user) != '' and user_pass.get_val(user) == psw:
+            html_content_to_send = success_page + user_secret.get_val(user)
+        else:
+            html_content_to_send = bad_creds_page
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
@@ -97,12 +146,12 @@ while True:
     # (2) `headers_to_send` => add any additional headers
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
-    headers_to_send = b''
+    headers_to_send = ''
 
     # Construct and send the final response
-    response  = b'HTTP/1.1 200 OK\r\n'
+    response  = 'HTTP/1.1 200 OK\r\n'
     response += headers_to_send
-    response += b'Content-Type: text/html\r\n\r\n'
+    response += 'Content-Type: text/html\r\n\r\n'
     response += html_content_to_send
     print_value('response', response)    
     client.send(response)
