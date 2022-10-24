@@ -130,6 +130,7 @@ def find_cookie(headers):
             get_line = line.split("=")
             if user_cookie.get_val(get_line[1]):
                 print "I came here"
+                print "I am user " + user_cookie.get_val(get_line[1])
                 return 1
             else:
                 print "I am cookie " + get_line[1]
@@ -165,14 +166,14 @@ while True:
     # like to send to the client.
     # Right now, we just send the default login page.
     if flag == 1:
-        data = headers.split('\n')
+        data = headers.split('\r\n')
         for lines in data:
-            if 'Cookie' in lines:
+            if "Cookie" in lines:
                 headings = lines.split("=")
                 cookie = headings[1]
         user = user_cookie.get_val(cookie)
         secret = user_secret.get_val(user)
-        html_content_to_send = success_page + secret
+        html_content_to_send = success_page + secret + '\n'
         headers_to_send = ''
 
     if flag == 2:
