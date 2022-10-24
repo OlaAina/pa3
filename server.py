@@ -18,7 +18,7 @@ sock.listen(2)
 
 ### Contents of pages we will serve.
 # Login form
-login_form = """
+login_form = b"""
    <form action = "http://localhost:%d" method = "post">
    Name: <input type = "text" name = "username">  <br/>
    Password: <input type = "text" name = "password" /> <br/>
@@ -26,11 +26,11 @@ login_form = """
    </form>
 """ % port
 # Default: Login page.
-login_page = "<h1>Please login</h1>" + login_form
+login_page = b"<h1>Please login</h1>" + login_form
 # Error page for bad credentials
-bad_creds_page = "<h1>Bad user/pass! Try again</h1>" + login_form
+bad_creds_page = b"<h1>Bad user/pass! Try again</h1>" + login_form
 # Successful logout
-logout_page = "<h1>Logged out successfully</h1>" + login_form
+logout_page = b"<h1>Logged out successfully</h1>" + login_form
 # A part of the page that will be displayed after successful
 # login or the presentation of a valid cookie
 success_page = """
@@ -75,7 +75,7 @@ while True:
     req = client.recv(1024)
 
     # Let's pick the headers and entity body apart
-    header_body = req.split('\r\n\r\n')
+    header_body = req.split(b'\r\n\r\n')
     headers = header_body[0]
     body = '' if len(header_body) == 1 else header_body[1]
     print_value('headers', headers)
@@ -97,12 +97,12 @@ while True:
     # (2) `headers_to_send` => add any additional headers
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
-    headers_to_send = ''
+    headers_to_send = b''
 
     # Construct and send the final response
-    response  = 'HTTP/1.1 200 OK\r\n'
+    response  = b'HTTP/1.1 200 OK\r\n'
     response += headers_to_send
-    response += 'Content-Type: text/html\r\n\r\n'
+    response += b'Content-Type: text/html\r\n\r\n'
     response += html_content_to_send
     print_value('response', response)    
     client.send(response)
