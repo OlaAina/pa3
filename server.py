@@ -5,7 +5,6 @@ import sys
 import random
 import hashTable
 
-
 # Read a command line argument for the port where the server
 # must run.
 port = 8080
@@ -46,14 +45,15 @@ success_page = """
    <h1>Your secret data is here:</h1>
 """ % port
 
+
 #### Helper functions
 # Printing.
 def print_value(tag, value):
-    print("Here is the", tag)
-    print("\"\"\"")
-    print(value)
-    print("\"\"\"")
-    print()
+    print "Here is the", tag
+    print "\"\"\""
+    print value
+    print "\"\"\""
+    print
 
 
 # Signal handler for graceful exit
@@ -61,9 +61,10 @@ def sigint_handler(sig, frame):
     print('Finishing up by closing listening socket...')
     sock.close()
     sys.exit(0)
+
+
 # Register the signal handler
 signal.signal(signal.SIGINT, sigint_handler)
-
 
 # TODO: put your application logic here!
 # Read login credentials for all the users
@@ -72,22 +73,26 @@ signal.signal(signal.SIGINT, sigint_handler)
 
 user_pass = hashTable.hashTable(100)
 user_secret = hashTable.hashTable(100)
+user_cookie = hashTable.hashTable(100)
+
 
 def buildUserPassDatabase():
     passwords = open("passwords.txt", "r")
     for line in passwords:
         data = line.split()
         user_pass.set_val(data[0], data[1])
-    
+
 
 def buildUserSecretDatabase():
     secrets = open("secrets.txt", "r")
     for line in secrets:
         data = line.split()
-        user_secret.set_val(data[0], data[1])   
+        user_secret.set_val(data[0], data[1])
+
 
 buildUserPassDatabase()
 buildUserSecretDatabase()
+
 
 def parseEntity(body):
     data = bytes(body).split('&')
@@ -106,9 +111,31 @@ def parseEntity(body):
         else:
             user = ''
             psw = data[1]
-            
-    return user,psw
-    
+
+    return user, psw
+
+
+def store_cookie(username, cookie):
+    user_cookie.set_val(cookie, username)
+
+
+# you have to parse the header and check if there
+# the reason why the cookie is from the last run is the reason why you have case return 0. Makes sense cause it should
+# persist after server is closed
+def find_cookie(headers):
+    data = bytes(headers).split()
+
+    for lines in data:
+        headings = lines.split()
+        if headings[0] == 'Cookies':
+            if user_cookie.get_val(headings[1]):
+                return 1
+            else:
+                return 0
+        else:
+            return 2
+
+
 ### Loop to accept incoming HTTP connections and respond.
 while True:
 
@@ -122,8 +149,10 @@ while True:
     print_value('headers', headers)
     print_value('entity body', body)
 
-    
-    
+    # if flag is 1 cookie is valid
+    # if flag is 0 there is cookie but not valid
+    # if flag is 2 there is no cookie at all so proceed to normal authentication
+    flag = find_cookie(headers)
 
     # TODO: Put your application logic here!
     # Parse headers and body and perform various actions
@@ -132,35 +161,45 @@ while True:
     # (1) `html_content_to_send` => add the HTML content you'd
     # like to send to the client.
     # Right now, we just send the default login page.
-    html_content_to_send = login_page
+    if flag == 1:
+        html_content_to_send = success_page
+    if flag == 2:
 
-    if body:
-        user, psw = parseEntity(body)
-        if (user_pass.get_val(user) != '' and user != '') and user_pass.get_val(user) == psw:
-            html_content_to_send = success_page + user_secret.get_val(user)
-        else:
-            html_content_to_send = bad_creds_page
+        html_content_to_send = login_page
+
+        if body:
+            user, psw = parseEntity(body)
+            if (user_pass.get_val(user) != '' or user != '') and user_pass.get_val(user) == psw:
+                html_content_to_send = success_page + user_secret.get_val(user) + '\n'
+                rand_val = random.getrandbits(64)
+                headers_to_send = 'Set-Cookie: token=' + str(rand_val) + '\r\n'
+                store_cookie(user, rand_val)
+            else:
+                html_content_to_send = bad_creds_page
+    if flag == 0:
+        html_content_to_send = bad_creds_page
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
     # html_content_to_send = logout_page
-    
+
     # (2) `headers_to_send` => add any additional headers
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
-    headers_to_send = ''
+
+    # headers_to_send = ''
 
     # Construct and send the final response
-    response  = 'HTTP/1.1 200 OK\r\n'
+    response = 'HTTP/1.1 200 OK\r\n'
     response += headers_to_send
     response += 'Content-Type: text/html\r\n\r\n'
     response += html_content_to_send
-    print_value('response', response)    
+    print_value('response', response)
     client.send(response)
     client.close()
-    
-    print("Served one request/connection!")
-    print()
+
+    print "Served one request/connection!"
+    print
 
 # We will never actually get here.
 # Close the listening socket
