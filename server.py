@@ -115,7 +115,7 @@ def parseEntity(body):
     return user, psw
 
 
-def store_cookie(username, cookie):
+def store_cookie(cookie, username):
     user_cookie.set_val(cookie, username)
 
 
@@ -123,17 +123,20 @@ def store_cookie(username, cookie):
 # the reason why the cookie is from the last run is the reason why you have case return 0. Makes sense cause it should
 # persist after server is closed
 def find_cookie(headers):
-    data = bytes(headers).split()
-
-    for lines in data:
-        headings = lines.split()
-        if headings[0] == 'Cookies':
-            if user_cookie.get_val(headings[1]):
+    data = headers.split('\r\n')
+    print_value(data, data)
+    for line in data:
+        if "Cookie" in line:
+            get_line = line.split("=")
+            if user_cookie.get_val(get_line[1]):
+                print "I came here"
                 return 1
             else:
+                print "I am cookie " + get_line[1]
+                print "Idk what im doing here"
                 return 0
-        else:
-            return 2
+    print "I made it here"
+    return 2
 
 
 ### Loop to accept incoming HTTP connections and respond.
@@ -162,9 +165,17 @@ while True:
     # like to send to the client.
     # Right now, we just send the default login page.
     if flag == 1:
-        html_content_to_send = success_page
-    if flag == 2:
+        data = headers.split('\n')
+        for lines in data:
+            if 'Cookie' in lines:
+                headings = lines.split("=")
+                cookie = headings[1]
+        user = user_cookie.get_val(cookie)
+        secret = user_secret.get_val(user)
+        html_content_to_send = success_page + secret
+        headers_to_send = ''
 
+    if flag == 2:
         html_content_to_send = login_page
 
         if body:
@@ -173,11 +184,13 @@ while True:
                 html_content_to_send = success_page + user_secret.get_val(user) + '\n'
                 rand_val = random.getrandbits(64)
                 headers_to_send = 'Set-Cookie: token=' + str(rand_val) + '\r\n'
-                store_cookie(user, rand_val)
+                store_cookie(str(rand_val), user)
             else:
                 html_content_to_send = bad_creds_page
+                headers_to_send = ''
     if flag == 0:
         html_content_to_send = bad_creds_page
+        headers_to_send = ''
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
