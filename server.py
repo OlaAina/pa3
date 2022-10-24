@@ -136,7 +136,7 @@ while True:
 
     if body:
         user, psw = parseEntity(body)
-        if (user_pass.get_val(user) != '' or user != '') and user_pass.get_val(user) == psw:
+        if (user_pass.get_val(user) != '' and user != '') and user_pass.get_val(user) == psw:
             html_content_to_send = success_page + user_secret.get_val(user)
         else:
             html_content_to_send = bad_creds_page
