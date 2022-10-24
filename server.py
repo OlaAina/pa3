@@ -124,19 +124,13 @@ def store_cookie(cookie, username):
 # persist after server is closed
 def find_cookie(headers):
     data = headers.split('\r\n')
-    print_value(data, data)
     for line in data:
         if "Cookie" in line:
             get_line = line.split("=")
             if user_cookie.get_val(get_line[1]):
-                print "I came here"
-                print "I am user " + user_cookie.get_val(get_line[1])
                 return 1
             else:
-                print "I am cookie " + get_line[1]
-                print "Idk what im doing here"
                 return 0
-    print "I made it here"
     return 2
 
 
@@ -156,6 +150,7 @@ while True:
     # if flag is 1 cookie is valid
     # if flag is 0 there is cookie but not valid
     # if flag is 2 there is no cookie at all so proceed to normal authentication
+    headers_to_send = ''
     flag = find_cookie(headers)
 
     # TODO: Put your application logic here!
@@ -201,7 +196,7 @@ while True:
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
 
-    headers_to_send = ''
+    #headers_to_send = ''
 
     # Construct and send the final response
     response = 'HTTP/1.1 200 OK\r\n'
