@@ -127,10 +127,11 @@ def find_cookie(headers):
     for line in data:
         if "Cookie" in line:
             get_line = line.split("=")
-            if user_cookie.get_val(get_line[1]):
-                return 1
-            else:
-                return 0
+            if len(get_line) > 1:
+                if user_cookie.get_val(get_line[1]):
+                    return 1
+                else:
+                    return 0
     return 2
 
 
@@ -176,7 +177,7 @@ while True:
 
         if body:
             user, psw = parseEntity(body)
-            if (user_pass.get_val(user) != '' or user != '') and user_pass.get_val(user) == psw:
+            if (user_pass.get_val(user) != '' and user != '') and user_pass.get_val(user) == psw:
                 html_content_to_send = success_page + user_secret.get_val(user) + '\n'
                 rand_val = random.getrandbits(64)
                 headers_to_send = 'Set-Cookie: token=' + str(rand_val) + '\r\n'
@@ -186,7 +187,7 @@ while True:
                 headers_to_send = ''
     if flag == 0:
         html_content_to_send = bad_creds_page
-        headers_to_send = ''
+        headers_to_send = 'Set-Cookie: token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\n'
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
