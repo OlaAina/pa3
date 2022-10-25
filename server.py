@@ -188,6 +188,10 @@ while True:
     if flag == 0:
         html_content_to_send = bad_creds_page
         headers_to_send = 'Set-Cookie: token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\n'
+
+    if "action=logout" in body:
+        html_content_to_send= login_page
+        headers_to_send = 'Set-Cookie: token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\n'
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
