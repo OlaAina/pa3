@@ -122,7 +122,7 @@ def store_cookie(cookie, username):
 # you have to parse the header and check if there
 # the reason why the cookie is from the last run is the reason why you have case return 0. Makes sense cause it should
 # persist after server is closed
-def find_cookie(headers):
+def find_cookie(headers, body):
     data = headers.split('\r\n')
     for line in data:
         if "Cookie" in line:
@@ -130,6 +130,8 @@ def find_cookie(headers):
             if len(get_line) > 1:
                 if user_cookie.get_val(get_line[1]):
                     return 1
+                elif body:
+                    return 2
                 else:
                     return 0
     return 2
@@ -152,7 +154,7 @@ while True:
     # if flag is 0 there is cookie but not valid
     # if flag is 2 there is no cookie at all so proceed to normal authentication
     headers_to_send = ''
-    flag = find_cookie(headers)
+    flag = find_cookie(headers, body)
 
     # TODO: Put your application logic here!
     # Parse headers and body and perform various actions
@@ -187,7 +189,7 @@ while True:
                 headers_to_send = ''
     if flag == 0:
         html_content_to_send = bad_creds_page
-        headers_to_send = 'Set-Cookie: token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\n'
+        headers_to_send = ''  # 'Set-Cookie: token=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\n'
 
     if "action=logout" in body:
         html_content_to_send = logout_page
@@ -201,7 +203,7 @@ while True:
     # you'd like to send the client?
     # Right now, we don't send any extra headers.
 
-    #headers_to_send = ''
+    # headers_to_send = ''
 
     # Construct and send the final response
     response = 'HTTP/1.1 200 OK\r\n'
